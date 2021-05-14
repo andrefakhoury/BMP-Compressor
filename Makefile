@@ -1,5 +1,5 @@
 all:
-	gcc src/*.c -o main.out -I include/ -std=c99 -Wall -fsanitize=address,undefined -g
+	gcc src/compress.c src/bmp.c src/main.c -o main -I include/ -std=c99 -Wall -fsanitize=address,undefined -g -lm
 
 clean:
 	rm main
