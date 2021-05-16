@@ -13,13 +13,13 @@ typedef struct {
 	unsigned char size;
 } VALUE;
 
-// apply differential encoding to G channel of bmp image
-void differential_compression(VALUE* values, BMPPIXEL* img, int height, int width);
+// applies differential encoding to G channel of bmp image
+VALUE* differential_compression(BMPPIXEL* img, int height, int width);
 
-// apply huffman and save bits to fp
-void save_bits(FILE* fp, VALUE* values, int size);
+// applies huffman and save bits to fp
+void write_bits(VALUE* values, int size, FILE * fp);
 
-// 
+// loads bits from fp into array of values 
 void load_bits(FILE* fp, VALUE* values);
 
 #endif

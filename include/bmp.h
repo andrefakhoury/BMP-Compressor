@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+#define FILEHEADER_SIZE 14
 #define HEADER_SIZE 54
 #define BF_TYPE 0x4D42 /* "MB" */
 
@@ -34,8 +35,6 @@ typedef struct {
 	unsigned char B;
 } BMPPIXEL;
 
-void bmp_load_file_header(FILE* fp, BMPFILEHEADER* fileheader);
-void bmp_load_info_header(FILE* fp, BMPINFOHEADER* infoheader);
 void bmp_load_headers(FILE* fp, BMPFILEHEADER* fileheader, BMPINFOHEADER* infoheader);
 void bmp_print_headers(FILE* fp, BMPFILEHEADER* fileheader, BMPINFOHEADER* infoheader);
 void bmp_copy_headers(FILE* src, FILE* dest);

@@ -2,102 +2,146 @@
 #include <stdio.h>
 #include "compress.h"
 
+// Computa a diferença entre dois valores adjacentes
 VALUE get_difference(unsigned char cur, unsigned char last) {
-	VALUE ret;
+	VALUE ret; // resultado
 
-	int diff = (int) cur - last;
+	int diff = (int) cur - last; // calcula a diferença
 	ret.code = abs(diff);
+
+	// calcula o tamanho do código
 	if (diff == 0) {
 		ret.size = 0;
 	} else {
 		ret.size = sizeof(diff) * 8 - __builtin_clz(ret.code);
 	}
 
-	if (diff < 0) { // apply 1-complement
+	// se a diferença for negativa, aplica complemento de 1
+	if (diff < 0) { 
 		ret.code = ((~ret.code) << __builtin_clz(ret.code)) >> __builtin_clz(ret.code);
 	}
 
 	return ret;
 }
 
-void differential_compression(VALUE* values, BMPPIXEL* img, int height, int width) {
-	unsigned char last = 0;
+// Calcula o array de pares (código, tamanho_código) da codificação de diferenças de img
+VALUE * differential_compression(BMPPIXEL* img, int height, int width) {
+	VALUE * values = (VALUE *) malloc(height * width * sizeof(VALUE)); // aloca o array resultado
+	unsigned char last_col = 0; // variável auxiliar que armazena o valor da coluna anterior
+	unsigned char last_row = 0; // variável auxiliar que armazena o valor da linha anterior
+
+	// Computa o array de diferencas
+	// Se é o primeiro da linha, faz a diferença com a célula acima, senao com a célula da esquerda
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			values[i * width + j] = get_difference(img[i * width + j].G, last);
-			last = img[i * width + j].G;
+			values[i * width + j] = get_difference(img[i * width + j].G, j == 0? last_row : last_col);
+
+			// atualiza os valores de last
+			if(j == 0) {
+				last_row = img[i * width + j].G;
+			}
+			last_col = img[i * width + j].G;
 		}
 	}
+	return values;
 }
 
-unsigned int append_bits(unsigned int src, unsigned char qtt_bits, unsigned int value) {
-	return (src << qtt_bits) | value;
+// função auxiliar que concatena "num_bits" em um buffer "src" com valores "value"
+unsigned int append_bits(unsigned int src, unsigned char num_bits, unsigned int value) {
+	return (src << num_bits) | value;
 }
 
-void save_bits(FILE* fp, VALUE* values, int size) {
-	unsigned int carry = 0;
-	unsigned char carry_size = 0;
+// Escreve o array de valores em um arquivo
+void write_bits(VALUE* values, int size, FILE* fp) {
+	unsigned int buffer = 0; // buffer de bits
+	unsigned char buffer_size = 0; // numero de bits no buffer
+
+	// Insere os bits de values no arquivo
 	for (int i = 0; i < size; i++) {
+		// "cur" é o codigo final (prefixo + diferença)
 		unsigned int cur = append_bits(prefTable[values[i].size], values[i].size, values[i].code);
+
+		// "size" é o numero de bits em "cur"
 		unsigned char size = values[i].size + prefSize[values[i].size];
 
-		if (size + carry_size > sizeof(carry) * 8) {
-			unsigned char extra = size + carry_size - sizeof(carry) * 8;
-			unsigned int aux = cur & ((1 << extra) - 1);
+		// Se cur "transbordar" o buffer, adiciona so o pedaço que cabe 
+		if (size + buffer_size > sizeof(buffer) * 8) {
+			unsigned char extra = size + buffer_size - sizeof(buffer) * 8; // tamanho do pedaço extra
+			unsigned int aux = cur & ((1 << extra) - 1); // parte "extra"
 
-			cur = cur >> extra;
-			carry = append_bits(carry, size - extra, cur);
-			fwrite(&carry, sizeof(unsigned int), 1, fp);
+			cur = cur >> extra; // atualiza cur com o pedaço que cabe
+			buffer = append_bits(buffer, size - extra, cur); // adiciona cur no buffer
+			fwrite(&buffer, sizeof(unsigned int), 1, fp); // como o buffer esta cheio, escreve ele no arquivo
 
-			carry = 0;
-			carry_size = 0;
-			cur = aux;
+			// buffer agora esta vazio
+			buffer = 0; 
+			buffer_size = 0;
+			// coloca o pedaço extra de volta em cur
+			cur = aux; 
 			size = extra;
 		}
 
-		carry_size += size;
-		carry = append_bits(carry, size, cur);
+		buffer_size += size; // atualiza o tamanho do buffer
+		buffer = append_bits(buffer, size, cur); // adiciona cur no buffer
 	}
 
-	if (carry_size > 0) {
-		// fill extra space with 111111... (because there is no prefix starting with 1111...11)
-		unsigned int extra = sizeof(carry) * 8 - carry_size;
-		carry = carry << extra;
-		carry ^= (1 << extra) - 1;
-		fwrite(&carry, sizeof(unsigned int), 1, fp);
+	// Se restou alguma coisa no buffer no final, escreve no arquivo
+	if (buffer_size > 0) {
+		// preenche espaço extra com 111111... (porque não há nenhum prefixo só com 1s)
+		unsigned int extra = sizeof(buffer) * 8 - buffer_size; // espaço extra na esquerda de buffer
+		buffer = buffer << extra; // traz o conteúdo de buffer pra esquerda 
+		buffer ^= (1u << extra) - 1; // preenche o resto com 1s
+		fwrite(&buffer, sizeof(unsigned int), 1, fp);
 	}
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/* 
+	EXTRA: As funções abaixo são uma parte "extra" do programa, que fizemos pra garantir que nosso algoritmo estava funcionando corretamente
+	Deixamos aqui caso seja relevante.
+*/
+
+// Carrega os bits do arquivo. Coloca o resultado em values
 void load_bits(FILE* fp, VALUE* values) {
-	unsigned int carry = 0, carry_size = 0, cur = 0, cur_id = 0;
+	unsigned int buffer = 0; // buffer de bits
+	unsigned int buffer_size = 0; // numero de bits no buffer
+	unsigned int cur = 0; // byte
+	unsigned int cur_pos = 0; // posicao atual no array de values
 
-	int nx_size = -1;
+	int value_size = -1; // tamanho da segunda parte da codificação de diferença. -1 significa "desconhecido"
+
+	// Le os bytes do arquivo
 	while(fread(&cur, sizeof(unsigned int), 1, fp) == 1) {
-		for (int bit = sizeof(carry) * 8 - 1; bit >= 0; bit--) {
-			carry = (carry << 1) | ((cur >> bit) & 1);
-			carry_size++;
 
-			if (nx_size == -1) {
+		// passa por todos os bits do byte lido
+		for (int bit = sizeof(buffer) * 8 - 1; bit >= 0; bit--) {
+			buffer = (buffer << 1) | ((cur >> bit) & 1); // adiciona o bit atual no buffer
+			buffer_size++;
+
+			if (value_size == -1) {
+				// ve se o buffer atual casa com algum prefixo
 				for (int i = 0; i < QT_PREF; i++) {
-					if (prefTable[i] == carry && prefSize[i] == carry_size) {
-						nx_size = i;
+					if (prefTable[i] == buffer && prefSize[i] == buffer_size) {
+						value_size = i; // se achou, agora o tamanho da segunda parte é conhecido
 					}
 				}
 
-				if (nx_size != -1) {
-					carry = 0;
-					carry_size = 0;
+				if (value_size != -1) { // se achou o tamanho da proxima parte, limpa o buffer
+					buffer = 0;
+					buffer_size = 0;
 				}
 			}
 
-			if (nx_size != -1 && carry_size == nx_size) {
-				values[cur_id].size = nx_size;
-				values[cur_id].code = carry;
-				cur_id++;
+			if (value_size != -1 && buffer_size == value_size) { // se estamos lendo a segunda parte e terminamos de ler todos os bits
+				// adiciona isso no array de values
+				values[cur_pos].size = value_size;
+				values[cur_pos].code = buffer;
+				cur_pos++;
 
-				carry = 0;
-				carry_size = 0;
-				nx_size = -1;
+				// limpa o buffer e volta a procurar por um prefixo
+				buffer = 0;
+				buffer_size = 0;
+				value_size = -1;
 			}
 		}
 	}

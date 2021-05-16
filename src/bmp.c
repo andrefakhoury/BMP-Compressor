@@ -11,7 +11,7 @@ void bmp_load_file_header(FILE* fp, BMPFILEHEADER* fileheader) {
 }
 
 void bmp_load_info_header(FILE* fp, BMPINFOHEADER* infoheader) {
-	fseek(fp, 14, SEEK_SET);
+	fseek(fp, FILEHEADER_SIZE, SEEK_SET);
 	fread(&infoheader->size, sizeof(unsigned int), 1, fp);
 	fread(&infoheader->width, sizeof(int), 1, fp);
 	fread(&infoheader->height, sizeof(int), 1, fp);
