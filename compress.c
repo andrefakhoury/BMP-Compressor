@@ -27,20 +27,13 @@ VALUE get_difference(unsigned char cur, unsigned char last) {
 // Calcula o array de pares (código, tamanho_código) da codificação de diferenças de img
 VALUE * differential_compression(BMPPIXEL* img, int height, int width) {
 	VALUE * values = (VALUE *) malloc(height * width * sizeof(VALUE)); // aloca o array resultado
-	unsigned char last_col = 0; // variável auxiliar que armazena o valor da coluna anterior
-	unsigned char last_row = 0; // variável auxiliar que armazena o valor da linha anterior
+	unsigned char last = 0; // variável auxiliar que armazena o último valor
 
 	// Computa o array de diferencas
-	// Se é o primeiro da linha, faz a diferença com a célula acima, senao com a célula da esquerda
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			values[i * width + j] = get_difference(img[i * width + j].G, j == 0? last_row : last_col);
-
-			// atualiza os valores de last
-			if(j == 0) {
-				last_row = img[i * width + j].G;
-			}
-			last_col = img[i * width + j].G;
+			values[i * width + j] = get_difference(img[i * width + j].G, last);
+			last = img[i * width + j].G;
 		}
 	}
 	return values;
