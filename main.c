@@ -1,3 +1,11 @@
+/* ==============================
+ * == André Fakhoury            *
+ * == Lucas Turci               *
+ * ==== SCC0561 - Multimídia    *
+ * ==== Prof. Rudinei           *
+ * == ICMC - 2021               *
+ * =============================*/
+
 #include "bmp.h"
 #include "compress.h"
 #include <stdio.h>
