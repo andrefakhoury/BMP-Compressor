@@ -7,6 +7,7 @@
 #define HEADER_SIZE 54
 #define BF_TYPE 0x4D42 /* "MB" */
 
+/** File Header of a BMP Image */
 typedef struct {
 	unsigned short type;
 	unsigned int size;
@@ -15,6 +16,7 @@ typedef struct {
 	unsigned int offbits;
 } BMPFILEHEADER;
 
+/** Information Header of a BMP Image */
 typedef struct {
 	unsigned int size;
 	int width;
@@ -29,16 +31,24 @@ typedef struct {
 	unsigned int importantcolors;
 } BMPINFOHEADER;
 
+/** RGB Pixel of a BMP Image */
 typedef struct {
-	unsigned char R;
-	unsigned char G;
-	unsigned char B;
-} BMPPIXEL;
+	unsigned char R, G, B;
+} RGBPIXEL;
 
+/** Load the headers of image 'fp' */
 void bmp_load_headers(FILE* fp, BMPFILEHEADER* fileheader, BMPINFOHEADER* infoheader);
+
+/** Print the headers fileheader and infoheader on stream 'fp' */
 void bmp_print_headers(FILE* fp, BMPFILEHEADER* fileheader, BMPINFOHEADER* infoheader);
+
+/** Copy headers from src to dest */
 void bmp_copy_headers(FILE* src, FILE* dest);
-void bmp_load_image(FILE* fp, BMPPIXEL* image, int img_size);
-void bmp_write_image(FILE* fp, BMPPIXEL* image, int img_size);
+
+/** Load pixels of image file 'fp' of size 'img_size' */
+void bmp_load_image(FILE* fp, RGBPIXEL* image, int img_size);
+
+/** Write 'img_size' pixels of image to stream 'fp' */
+void bmp_write_image(FILE* fp, RGBPIXEL* image, int img_size);
 
 #endif

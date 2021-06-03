@@ -2,7 +2,10 @@
 #include <stdio.h>
 
 void bmp_load_file_header(FILE* fp, BMPFILEHEADER* fileheader) {
+	// seek to begin of file
 	fseek(fp, 0, SEEK_SET);
+
+	// read each field
 	fread(&fileheader->type, sizeof(unsigned short), 1, fp);
 	fread(&fileheader->size, sizeof(unsigned int), 1, fp);
 	fread(&fileheader->reserved1, sizeof(unsigned short), 1, fp);
@@ -11,7 +14,10 @@ void bmp_load_file_header(FILE* fp, BMPFILEHEADER* fileheader) {
 }
 
 void bmp_load_info_header(FILE* fp, BMPINFOHEADER* infoheader) {
+	// seek to first information bit
 	fseek(fp, FILEHEADER_SIZE, SEEK_SET);
+
+	// read each field
 	fread(&infoheader->size, sizeof(unsigned int), 1, fp);
 	fread(&infoheader->width, sizeof(int), 1, fp);
 	fread(&infoheader->height, sizeof(int), 1, fp);
@@ -26,11 +32,14 @@ void bmp_load_info_header(FILE* fp, BMPINFOHEADER* infoheader) {
 }
 
 void bmp_load_headers(FILE* fp, BMPFILEHEADER* fileheader, BMPINFOHEADER* infoheader) {
+	// load file and info headers
 	bmp_load_file_header(fp, fileheader);
 	bmp_load_info_header(fp, infoheader);
 }
 
 void bmp_print_headers(FILE* fp, BMPFILEHEADER* fileheader, BMPINFOHEADER* infoheader) {
+	// print each header value (used for debugging)
+
 	fprintf(fp, "== File Header ==\n");
 	fprintf(fp, "type: %x\n", fileheader->type);
 	fprintf(fp, "size: %d\n", fileheader->size);
@@ -53,17 +62,21 @@ void bmp_print_headers(FILE* fp, BMPFILEHEADER* fileheader, BMPINFOHEADER* infoh
 }
 
 void bmp_copy_headers(FILE* src, FILE* dest) {
+	// seek both pointers to begin of file
 	fseek(src, 0, SEEK_SET);
 	fseek(dest, 0, SEEK_SET);
 
+	// read from src and write into dest
 	for (int i = 0; i < HEADER_SIZE; i++) {
 		fputc(fgetc(src), dest);
 	}
 }
 
-void bmp_load_image(FILE* fp, BMPPIXEL* image, int img_size) {
+void bmp_load_image(FILE* fp, RGBPIXEL* image, int img_size) {
+	// seek to HEADER_SIZE (position of first pixel)
 	fseek(fp, HEADER_SIZE, SEEK_SET);
 
+	// read each pixel info
 	for (int i = 0; i < img_size; i++) {
 		image[i].B = fgetc(fp);
 		image[i].G = fgetc(fp);
@@ -71,9 +84,11 @@ void bmp_load_image(FILE* fp, BMPPIXEL* image, int img_size) {
 	}
 }
 
-void bmp_write_image(FILE* fp, BMPPIXEL* image, int img_size) {
+void bmp_write_image(FILE* fp, RGBPIXEL* image, int img_size) {
+	// seek to HEADER_SIZE (position of first pixel)
 	fseek(fp, HEADER_SIZE, SEEK_SET);
 
+	// print each pixel info
 	for (int i = 0; i < img_size; i++) {
 		fputc(image[i].B, fp);
 		fputc(image[i].G, fp);

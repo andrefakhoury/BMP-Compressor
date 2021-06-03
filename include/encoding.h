@@ -1,5 +1,5 @@
-#ifndef COMPRESS_H
-#define COMPRESS_H
+#ifndef ENCODING_H
+#define ENCODING_H
 
 #include "bmp.h"
 
@@ -14,7 +14,7 @@ typedef struct {
 } VALUE;
 
 // applies differential encoding to G channel of bmp image
-VALUE* differential_compression(BMPPIXEL* img, int height, int width);
+void differential_compression(RGBPIXEL* img, int height, int width, VALUE* values);
 
 // applies huffman and save bits to fp
 void write_bits(VALUE* values, int size, FILE * fp);

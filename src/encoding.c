@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "compress.h"
+#include "encoding.h"
 
 // Computa a diferença entre dois valores adjacentes
 VALUE get_difference(unsigned char cur, unsigned char last) {
@@ -25,8 +25,7 @@ VALUE get_difference(unsigned char cur, unsigned char last) {
 }
 
 // Calcula o array de pares (código, tamanho_código) da codificação de diferenças de img
-VALUE * differential_compression(BMPPIXEL* img, int height, int width) {
-	VALUE * values = (VALUE *) malloc(height * width * sizeof(VALUE)); // aloca o array resultado
+void differential_compression(RGBPIXEL* img, int height, int width, VALUE* values) {
 	unsigned char last_col = 0; // variável auxiliar que armazena o valor da coluna anterior
 	unsigned char last_row = 0; // variável auxiliar que armazena o valor da linha anterior
 
@@ -43,7 +42,6 @@ VALUE * differential_compression(BMPPIXEL* img, int height, int width) {
 			last_col = img[i * width + j].G;
 		}
 	}
-	return values;
 }
 
 // função auxiliar que concatena "num_bits" em um buffer "src" com valores "value"
@@ -94,12 +92,6 @@ void write_bits(VALUE* values, int size, FILE* fp) {
 		fwrite(&buffer, sizeof(unsigned int), 1, fp);
 	}
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/* 
-	EXTRA: As funções abaixo são uma parte "extra" do programa, que fizemos pra garantir que nosso algoritmo estava funcionando corretamente
-	Deixamos aqui caso seja relevante.
-*/
 
 // Carrega os bits do arquivo. Coloca o resultado em values
 void load_bits(FILE* fp, VALUE* values) {
