@@ -97,6 +97,19 @@ int test_zigzag() {
 	free(vec);
 }
 
+/*
+	ACs must have size num_blocks * (BLOCK_SIZE * BLOCK_SIZE - 1)
+	DCs must have size num_blocks
+*/
+void extract_acdc(int ** blocks, int num_blocks, int * ACs, int * DCs) {
+	
+	for(int i = 0, j = 0; i < num_blocks; i++) {
+		DCs[i] = blocks[i][0];
+		for(int k = 1; k < BLOCK_SIZE * BLOCK_SIZE; k++)
+			ACs[j++] = blocks[i][k];
+	}
+}
+
 int main() {
 
 
