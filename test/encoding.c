@@ -3,6 +3,17 @@
 
 const int BLOCK_SIZE = 8;
 
+typedef struct {
+	int first, second;
+} INT_PAIR;
+
+INT_PAIR make_int_pair(int a, int b) {
+	INT_PAIR ret;
+	ret.first = a;
+	ret.second = b;
+	return ret;
+}
+
 // faz o zigzag em vec, cujo tamanho deve ser BLOCK_SIZE^2, e coloca o resultado no proprio vec
 void zigzag(int* vec) {
 	int * ans = (int *) malloc(sizeof(int) * BLOCK_SIZE * BLOCK_SIZE); // aloca um vetor auxiliar para armazenar os elementos em ordem zig zag
@@ -110,7 +121,30 @@ void extract_acdc(int ** blocks, int num_blocks, int * ACs, int * DCs) {
 	}
 }
 
-int main() {
+// UNTESTED
+void encode_blocks(int ** blocks, int num_blocks, INT_PAIR * ans, int * ans_len) {
 
+	int len_dcs = num_blocks;
+	int len_acs = num_blocks * (BLOCK_SIZE * BLOCK_SIZE - 1);
+
+	int * ACs = malloc(sizeof(int) * len_acs);
+	int * DCs = malloc(sizeof(int) * len_dcs);
+	for(int i = 0; i < num_blocks; i++) {
+		zigzag(blocks[i]);
+	}
+
+	extract_acdc(blocks, num_blocks, ACs, DCs);
+
+	(*ans_len) = 0;
+	differential_encode(DCs, len_dcs, ans);
+	(*ans_len) += len_dcs;
+
+	int rle_size_used;
+	rle_encode(ACs, len_acs, ans + (*ans_len), &rle_size_used);
+	(*ans_len) += rle_size_used;
+}
+
+int main() {
+	
 
 }
