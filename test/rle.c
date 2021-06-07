@@ -43,6 +43,7 @@ INT_PAIR make_int_pair(int a, int b) {
 
 // Encodes a sequence of values with Run Length Encoding, extracting the pairs (number of zeros, value)
 // ans must be allocated with at least len * sizeof(INT_PAIR) bytes
+// len must be the block size
 void rle_encode(int * vec, int len, INT_PAIR * ans, int * ans_len) {
 	(*ans_len) = 0;
 	INT_PAIR block_end = {}; // flag that indicates a suffix of only zeros
@@ -66,8 +67,8 @@ void rle_encode(int * vec, int len, INT_PAIR * ans, int * ans_len) {
 	ans[(*ans_len)++] = block_end;
 }
 
+// only works with positive numbers
 int ones_complement(int x) {
-	x = abs(x);
 	return ((~x) << __builtin_clz(x)) >> __builtin_clz(x);
 }
 
@@ -112,7 +113,7 @@ INT_PAIR find_prefix(int x, int len) {
 void rle_entropy_encode(INT_PAIR * vec, int len, INT_PAIR * ans) {
 
 	for(int i = 0; i < len; i++) {
-		int value = vec[i].second >= 0? vec[i].second : ones_complement(vec[i].second);
+		int value = vec[i].second >= 0? vec[i].second : ones_complement(-vec[i].second);
 		int size = number_of_bits(abs(value));
 
 		int prefix = binary_string_to_int(_rle_prefixes[vec[i].first][size]);
@@ -140,6 +141,22 @@ void rle_entropy_decode(INT_PAIR * vec, int len, INT_PAIR * ans) {
 			}
 		}
 		ans[i].second = cur;
+	}
+}
+
+void rle_decode(INT_PAIR * vec, int len, int * ans, int ans_len) {
+	int cur = 0;
+	for(int i = 0; i < len; i++) {
+		if(vec[i].first + vec[i].second == 0) break; // End of Block
+		for(int j = 0; j < vec[i].first; j++) {
+			ans[cur++] = 0;
+		}
+		ans[cur++] = vec[i].second;
+	}
+
+	// Fill the rest with zeros
+	while(cur < ans_len) {
+		ans[cur++] = 0;
 	}
 }
 
@@ -171,4 +188,12 @@ int main() {
 	for(int i = 0; i < code_len; ++i) {
 		printf("(%d, %d)\n", code[i].first, code[i].second);
 	}
+
+
+	int vec2[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+	rle_decode(code, code_len, vec2, 30);
+	for(int i = 0; i < 30; ++i) {
+		printf("%d ", vec2[i]);
+	}
+	printf("\n");
 }
