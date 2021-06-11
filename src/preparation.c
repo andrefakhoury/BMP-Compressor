@@ -3,19 +3,6 @@
 #include "preparation.h"
 #include "utils.h"
 
-/** Padding of a matrix with zeros */
-void padding(const double *v, double *dest, const int old_w, const int new_w, const int old_h, const int new_h) {
-	memset(dest, 0, new_w * new_h * sizeof(double)); // fill with zeros
-	const int min_w = old_w < new_w ? old_w : new_w;
-	const int min_h = old_h < new_h ? old_h : new_h;
-
-	for (int i = 0; i < min_h; i++) {
-		for (int j = 0; j < min_w; j++) {
-			dest[i * new_w + j] = v[i * old_w + j];
-		}
-	}
-}
-
 /** Convert 'size' RGB pixels to YCbCr */
 void rgb_to_ycbcr(const RGBPIXEL *rgb, double *Y, double *Cb, double *Cr, const int size) {
     for (int i = 0; i < size; i++) {
@@ -56,6 +43,19 @@ void reverse_subsample(const double* s, double* dest, const int width, const int
 					dest[(2 * i + di) * width + 2 * j + dj] = s[i * sub_width + j];
 				}
 			}
+		}
+	}
+}
+
+/** Padding of a matrix with zeros */
+void padding(const double *v, double *dest, const int old_w, const int new_w, const int old_h, const int new_h) {
+	memset(dest, 0, new_w * new_h * sizeof(double)); // fill with zeros
+	const int min_w = old_w < new_w ? old_w : new_w;
+	const int min_h = old_h < new_h ? old_h : new_h;
+
+	for (int i = 0; i < min_h; i++) {
+		for (int j = 0; j < min_w; j++) {
+			dest[i * new_w + j] = v[i * old_w + j];
 		}
 	}
 }
