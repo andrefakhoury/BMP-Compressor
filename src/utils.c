@@ -1,24 +1,23 @@
 #include "utils.h"
 
-void grayscale(RGBPIXEL *image, int img_size, FILE *input) {
-	// abre o arquivo da imagem em tons de cinza
-	FILE *gray = fopen("cinza.bmp", "wb");
-	if (gray == NULL) {
-		fprintf(stderr, "Error: could not open \"cinza\" file\n");
-		exit(1);
+unsigned int clip(const double val, const unsigned int min, const unsigned int max) {
+	return val < min ? min : val > max ? max : val;
+}
+
+/** Alloc double matrix of of size [width/8*height/8][64] */
+void alloc_blocks(double*** blocks, const int width, const int height) {
+	const int len = (width / 8) * (height / 8);
+	*blocks = malloc(len * sizeof(double*));
+	for (int i = 0; i < len; i++) {
+		(*blocks)[i] = malloc(64 * sizeof(double));
 	}
+}
 
-	// copia os headers da imagem original para a em tons de cinza
-	bmp_copy_headers(input, gray);
-
-	// transforma a imagem
-	for (int i = 0; i < img_size; i++) {
-		image[i].B = image[i].G;
-		image[i].R = image[i].G;
+/** Free blocks previously alloc'd */
+void free_blocks(double** blocks, const int width, const int height) {
+	const int len = (width / 8) * (height / 8);
+	for (int i = 0; i < len; i++) {
+		free(blocks[i]);
 	}
-
-	// escreve a imagem no arquivo
-	bmp_write_image(gray, image, img_size);
-
-	fclose(gray);
+	free(blocks);
 }
