@@ -38,4 +38,7 @@ void alloc_int_blocks(int*** blocks, const int width, const int height);
 /** Free blocks previously alloc'd */
 void free_blocks(void** blocks, const int width, const int height);
 
+/* Returns a file's size in bytes */
+long get_file_size(FILE * fp);
+
 #endif

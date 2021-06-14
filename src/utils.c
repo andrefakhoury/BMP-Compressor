@@ -63,3 +63,8 @@ void free_blocks(void** blocks, const int width, const int height) {
 	}
 	free(blocks);
 }
+
+long get_file_size(FILE * fp) {
+	fseek(fp, 0L, SEEK_END);
+	return ftell(fp);
+}
