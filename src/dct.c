@@ -79,21 +79,21 @@ void idct(double** blocks, const int qt_blocks) {
 }
 
 /** Apply quantization to blocks (of size 64), according to given quantization table */
-void quantization(double** blocks, const int* table, const int qt_blocks) {
+void quantization(double** blocks, int** result, const int* table, const int qt_blocks) {
 	const double k = 1; // compress factor
 	for (int bl = 0; bl < qt_blocks; bl++) {
 		for (int i = 0; i < 64; i++) {
-			blocks[bl][i] = blocks[bl][i] / table[i] / k;
+			result[bl][i] = (int) round(blocks[bl][i] / table[i] / k);
 		}		
 	}
 }
 
 /** Reverse the quantization process, according to given quantization table */
-void reverse_quantization(double** blocks, const int* table, const int qt_blocks) {
+void reverse_quantization(int** blocks, double** result, const int* table, const int qt_blocks) {
 	const double k = 1; // compress factor
 	for (int bl = 0; bl < qt_blocks; bl++) {
 		for (int i = 0; i < 64; i++) {
-			blocks[bl][i] = blocks[bl][i] * table[i] * k;
+			result[bl][i] = (double) blocks[bl][i] * table[i] * k;
 		}
 	}
 }

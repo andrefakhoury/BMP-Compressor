@@ -5,6 +5,8 @@ void bmp_load_file_header(FILE* fp, BMPFILEHEADER* fileheader) {
 	// seek to begin of file
 	fseek(fp, 0, SEEK_SET);
 
+	if(fileheader == NULL) return;
+	
 	// read each field
 	fread(&fileheader->type, sizeof(unsigned short), 1, fp);
 	fread(&fileheader->size, sizeof(unsigned int), 1, fp);
@@ -16,6 +18,8 @@ void bmp_load_file_header(FILE* fp, BMPFILEHEADER* fileheader) {
 void bmp_load_info_header(FILE* fp, BMPINFOHEADER* infoheader) {
 	// seek to first information bit
 	fseek(fp, FILEHEADER_SIZE, SEEK_SET);
+
+	if(infoheader == NULL) return;
 
 	// read each field
 	fread(&infoheader->size, sizeof(unsigned int), 1, fp);

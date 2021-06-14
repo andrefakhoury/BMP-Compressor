@@ -18,9 +18,9 @@ void dct(double** blocks, const int qt_blocks);
 void idct(double** blocks, const int qt_blocks);
 
 /** Apply quantization to blocks (of size 64), according to given quantization table */
-void quantization(double** blocks, const int* table, const int qt_blocks);
+void quantization(double** blocks, int** result, const int* table, const int qt_blocks);
 
 /** Reverse the quantization process, according to given quantization table */
-void reverse_quantization(double** blocks, const int* table, const int qt_blocks);
+void reverse_quantization(int** blocks, double** result, const int* table, const int qt_blocks);
 
 #endif

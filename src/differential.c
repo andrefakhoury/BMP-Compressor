@@ -1,38 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct {
-	int first, second;
-} INT_PAIR;
-
-INT_PAIR make_int_pair(int a, int b) {
-	INT_PAIR ret;
-	ret.first = a;
-	ret.second = b;
-	return ret;
-}
-
-int ones_complement(int x) {
-	return ((~x) << __builtin_clz(x)) >> __builtin_clz(x);
-}
-
-int ones_complement_with_size(int x, int sz) {
-	int mask = (1 << sz) - 1;
-	return (~x) & mask;
-}
-
-int number_of_bits(int x) {
-	if(x == 0) return 0;
-	return sizeof(x) * 8 - __builtin_clz(x);
-}
-
-// auxiliar function that concatenates "num_bits" in a buffer "src" with value "value"
-unsigned int append_bits(unsigned int src, unsigned char num_bits, unsigned int value) {
-	return (src << num_bits) | value;
-}
+#include "differential.h"
 
 void differential_encode(int * vec, int len, INT_PAIR * ans) {
-
 	int last = 0;
 	for(int i = 0; i < len; i++) {
 		int value = vec[i] - last;
@@ -71,7 +42,7 @@ void differential_entropy_encode(INT_PAIR * vec, int len, INT_PAIR * ans) {
 // Finds the corresponding huffman prefix matching
 // the "len" least significant bits of "x"
 // Returns a -1 if no match was found
-int find_prefix(int x, int len) {
+int find_differential_prefix(int x, int len) {
 	for(int i = 0; i < QT_PREF; i++) {
 		if(x == prefTable[i] && prefSize[i] == len) return i;
 	}
@@ -88,7 +59,7 @@ void differential_entropy_decode(INT_PAIR * vec, int len, INT_PAIR * ans) {
 			cur |= (vec[i].first >> j)&1;
 			cur_sz++;
 
-			int symbol_size = find_prefix(cur, cur_sz);
+			int symbol_size = find_differential_prefix(cur, cur_sz);
 			if(symbol_size != -1 && ans[i].second == -1) {
 				ans[i].second = symbol_size;
 				cur = cur_sz = 0;
@@ -100,7 +71,7 @@ void differential_entropy_decode(INT_PAIR * vec, int len, INT_PAIR * ans) {
 }
 
 
-
+/* 
 int main() {
 
 	int aux = 9;
@@ -135,4 +106,4 @@ int main() {
 	differential_decode(res0, len, res);
 	for(int i = 0; i < len; i++) printf("%d ", res[i]);
 	printf("\n");
-}
+} */
