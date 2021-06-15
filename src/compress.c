@@ -14,10 +14,12 @@
 
 #define BLOCK_SIZE 8
 
+/** Do some preparation work */
 void pre() {
 	read_rle_prefixes();
 }
 
+/** Compress channel I */
 void compress_channel(FILE * fp, double * I, int width, int height, int should_subsample) {
 	double * I_sub = NULL;
 

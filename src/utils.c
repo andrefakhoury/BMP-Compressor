@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <assert.h>
 
-/* Create a pair of integers */
+/** Create a pair of integers */
 INT_PAIR make_int_pair(int a, int b) {
 	INT_PAIR ret;
 	ret.first = a;
@@ -9,29 +9,29 @@ INT_PAIR make_int_pair(int a, int b) {
 	return ret;
 }
 
-// return number of bits of x
+/** return number of bits of x */
 int number_of_bits(int x) {
 	if(x == 0) return 0;
 	return sizeof(x) * 8 - __builtin_clz(x);
 }
 
-// return 1-complement of x if size of it is already known
+/** return 1-complement of x if size of it is already known */
 int ones_complement_with_size(int x, int sz) {
 	int mask = (1 << sz) - 1;
 	return (~x) & mask;
 }
 
-// return 1-complement of x (only works with positive numbers)
+/** return 1-complement of x (only works with positive numbers) */
 int ones_complement(int x) {
 	return ones_complement_with_size(x, number_of_bits(x));
 }
 
-// auxiliar function that concatenates "num_bits" in a buffer "src" with value "value"
+/** auxiliar function that concatenates "num_bits" in a buffer "src" with value "value" */
 unsigned int append_bits(unsigned int src, unsigned char num_bits, unsigned int value) {
 	return (src << num_bits) | value;
 }
 
-/* Clip a double to fit inside [min, max] */
+/** Clip a double to fit inside [min, max] */
 unsigned int clip(const double val, const unsigned int min, const unsigned int max) {
 	return val < min ? min : val > max ? max : val;
 }
@@ -64,6 +64,7 @@ void free_blocks(void** blocks, const int width, const int height) {
 	free(blocks);
 }
 
+/** Return file size in bytes */
 long get_file_size(FILE * fp) {
 	fseek(fp, 0L, SEEK_END);
 	return ftell(fp);

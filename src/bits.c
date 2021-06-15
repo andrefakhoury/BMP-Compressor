@@ -6,7 +6,6 @@
 #include "rle.h"
 
 void load_bits(FILE * fp, INT_PAIR * DC_codes, INT_PAIR * AC_codes, int len_dcs, int * len_acs) {
-
 	int reader = 0; // current bits to read
 	int reader_size = 0; // number of bits in reader
 
@@ -45,7 +44,6 @@ void load_bits(FILE * fp, INT_PAIR * DC_codes, INT_PAIR * AC_codes, int len_dcs,
 			symbol_size = -1;
 			buffer_size = 0;
 			buffer = 0;
-
 		}
 	}
 
@@ -67,15 +65,13 @@ void load_bits(FILE * fp, INT_PAIR * DC_codes, INT_PAIR * AC_codes, int len_dcs,
 		reader_size--;
 		buffer_size++;
 
-
 		if(buffer_size + 1 == sizeof(buffer) * 8) { // if I read one more time, its going to overflow
 			fprintf(stderr, "Something wrong happened during the decoding\n");
 			exit(-1);
 		}
  
 		INT_PAIR ret = find_rle_prefix(buffer, buffer_size);
-		// printf("%d\n", cnt_read);
-		// fflush(stdout);
+		
 		// if reading the prefix
 		if(symbol_size == -1 && ret.first != -1) {
 			zeros = ret.first;
@@ -88,8 +84,6 @@ void load_bits(FILE * fp, INT_PAIR * DC_codes, INT_PAIR * AC_codes, int len_dcs,
 			buffer = 0;
 		}
 		if(symbol_size != -1 && buffer_size == symbol_size) {
-			// if(++auxx == 4) exit(0);
-			// fflush(stdout);
 			if(buffer_size && (buffer >> (buffer_size-1)) == 0) buffer = -ones_complement_with_size(buffer, buffer_size);
 			AC_codes[cnt_read++] = make_int_pair(zeros, buffer);
 			buffer = 0;
@@ -98,7 +92,7 @@ void load_bits(FILE * fp, INT_PAIR * DC_codes, INT_PAIR * AC_codes, int len_dcs,
 		}
 	}
 
-	(*len_acs) = cnt_read;
+	*len_acs = cnt_read;
 
 	assert(ones_complement_with_size(reader, reader_size) == 0);
 }
@@ -107,7 +101,7 @@ void write_bits(INT_PAIR * vec, int len, FILE * fp) {
 	unsigned int buffer = 0; // buffer of bits
 	int buffer_size = 0; // number of bits inside buffer
 
-	// Insere os bits de values no arquivo
+	// Insert bits of values into file
 	for (int i = 0; i < len; i++) {
 
 		// value to write
@@ -117,49 +111,31 @@ void write_bits(INT_PAIR * vec, int len, FILE * fp) {
 		int size = vec[i].second;
 
 		if (size + buffer_size > sizeof(buffer) * 8) {
-			int extra = size + buffer_size - sizeof(buffer) * 8; // tamanho do pedaço extra
-			int aux = cur & ((1 << extra) - 1); // parte "extra"
+			int extra = size + buffer_size - sizeof(buffer) * 8; // extra size
+			int aux = cur & ((1 << extra) - 1); // extra bits in buffer
 
-			cur = cur >> extra; // atualiza cur com o pedaço que cabe
-			buffer = append_bits(buffer, size - extra, cur); // adiciona cur no buffer
-			fwrite(&buffer, sizeof(int), 1, fp); // como o buffer esta cheio, escreve ele no arquivo
+			cur = cur >> extra; // update cur with extra
+			buffer = append_bits(buffer, size - extra, cur); // add cur to buffer
+			fwrite(&buffer, sizeof(int), 1, fp); // buffer is full, write to file
 
-			// buffer agora esta vazio
+			// buffer is already used, so it's empty now
 			buffer = 0; 
 			buffer_size = 0;
-			// coloca o pedaço extra de volta em cur
+			// update extra back to cur
 			cur = aux; 
 			size = extra;
 		}
 
-		buffer_size += size; // atualiza o tamanho do buffer
-		buffer = append_bits(buffer, size, cur); // adiciona cur no buffer
+		buffer_size += size; // update buffer size
+		buffer = append_bits(buffer, size, cur); // add cur to buffer
 	}
 
-	// Se restou alguma coisa no buffer no final, escreve no arquivo
+	// if there is any values after the main loop, write it to file
 	if (buffer_size > 0) {
-		// preenche espaço extra com 111111... (porque não há nenhum prefixo só com 1s)
-		int extra = sizeof(buffer) * 8 - buffer_size; // espaço extra na esquerda de buffer
-		buffer = buffer << extra; // traz o conteúdo de buffer pra esquerda 
-		buffer ^= (1u << extra) - 1; // preenche o resto com 1s
+		// fill extra space with 111111... (unused value)
+		int extra = sizeof(buffer) * 8 - buffer_size;
+		buffer = buffer << extra;
+		buffer ^= (1u << extra) - 1;
 		fwrite(&buffer, sizeof(int), 1, fp);
 	}
 }
-
-/* int main() {
-	FILE * fp = fopen("test.bin", "wb");
-
-	INT_PAIR vec[] = {
-		make_int_pair(9, 4),
-		make_int_pair(6, 4),
-		make_int_pair(1, 2),
-		make_int_pair(26, 5),
-		make_int_pair(15, 4),
-		make_int_pair(1, 2),
-		make_int_pair(0, 3),
-	};
-
-	write_bits(vec, 7, fp);
-
-	fclose(fp);
-} */

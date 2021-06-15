@@ -14,10 +14,12 @@
 
 #define BLOCK_SIZE 8
 
+/** Do some preparation work */
 void pre() {
 	read_rle_prefixes();
 }
 
+/** Decompress single channel I */
 void decompress_channel(FILE * fp, double * I, int original_width, int original_height, int is_subsampled) {
 	int width, height;
 
